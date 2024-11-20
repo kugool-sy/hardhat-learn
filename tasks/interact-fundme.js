@@ -1,22 +1,11 @@
-//import ethers from "hardhat
-const { ethers } = require("hardhat")
+const {task} = require("hardhat/config")
 
+task("interact-fundme", "interact with fundme contract")
+    .addParam("addr", "fundme contract address")
+    .setAction(async (taskArgs, hre) =>{
 
-async function main() {
     const fundMeFactory = await ethers.getContractFactory("FundMe")
-    console.log("contract deploying")
-    const fundMe = await fundMeFactory.deploy(300)
-    
-    await fundMe.waitForDeployment()
-    console.log("Contract has been deployed success: " + fundMe.target)
-
-    if (hre.network.config.chainId === 11155111 && process.env.ETHERSCAN_API_KEY){
-        console.log("Waiting for 5 confirmations")
-        await fundMe.deploymentTransaction().wait(5)
-        await verifyFundMe(fundMe.target, [300])
-    }else{
-        console.log("verification skipped...")
-    }
+    const fundMe = fundMeFactory.attach(taskArgs.addr)
 
     const [firstAccount, secondAccount] = await ethers.getSigners()
 
@@ -38,14 +27,4 @@ async function main() {
     console.log(`balance of first account ${firstAccount.address} is ${firstAccountBalanceInFundMe}`)
     console.log(`balance of second account ${secondAccount.address} is ${secondAccountBalanceInFundMe}`)
 
-}   
-
-
-async function verifyFundMe(fundAddr, args) {
-    await hre.run("verify:verify",{
-        address: fundAddr,
-        constructorArguments: args,
-    })
-}
-
-main().then().catch((err) => {console.log(err)})
+})
